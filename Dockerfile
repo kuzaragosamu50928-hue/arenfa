@@ -27,6 +27,7 @@ COPY --from=builder /app/venv /app/venv
 COPY src/ /app/src/
 COPY main.py .
 COPY admin_panel.html .
+COPY public_map.html .
 
 # Activate the virtual environment
 ENV PATH="/app/venv/bin:$PATH"

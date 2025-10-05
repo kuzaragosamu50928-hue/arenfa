@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Карта Аренды | Мелитополь</title>
+    <!--
+        API Яндекс.Карт.
+        ВАЖНО: Замените "ВАШ_API_КЛЮЧ" на ваш реальный ключ.
+    -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=99974868-31a8-4dfe-bb34-18411a01888a&lang=ru_RU" type="text/javascript"></script>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+            flex-grow: 1;
+            background-color: #eaf2ff;
+        }
+        .header {
+            background-color: #fff;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #2c3e50;
+        }
+        /* Убираем лишние элементы управления, чтобы карта была чище */
+        [class*="ymaps-2-1-control-tool"] {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Карта Аренды | Мелитополь</h1>
+    </div>
+    <div id="map"></div>
+
+    <script type="text/javascript">
+        ymaps.ready(init);
+
+        function init() {
+            const melitopolCoords = [46.8499, 35.3667];
+
+            const myMap = new ymaps.Map("map", {
+                center: melitopolCoords,
+                zoom: 13,
+                controls: ['zoomControl', 'fullscreenControl']
+            });
+
+            function escapeHTML(str) {
+                if (typeof str !== 'string') return String(str);
+                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            }
+
+            async function loadListings() {
+                try {
+                    const apiUrl = `/api/listings`;
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+                    const listings = await response.json();
+
+                    for (const id in listings) {
+                        const listing = listings[id];
+                        const data = listing.data;
+
+                        if (data.address) {
+                            const geocodeResult = await ymaps.geocode(`Мелитополь, ${data.address}`);
+                            const geoObject = geocodeResult.geoObjects.get(0);
+
+                            if (geoObject) {
+                                const coords = geoObject.geometry.getCoordinates();
+                                const priceSuffix = listing.type === 'rent_offer_long_term' ? '₽/мес.' : '₽/сутки';
+                                const title = listing.type === 'rent_offer_long_term' ? 'Долгосрок' : 'Посуточно';
+
+                                const balloonContent = `
+                                    <div style="font-family: sans-serif; font-size: 14px; line-height: 1.5;">
+                                        <h4 style="font-weight: bold; margin: 0 0 5px 0;">${escapeHTML(title)}</h4>
+                                        <p style="margin: 0 0 10px 0;">${escapeHTML(data.description.substring(0, 100))}...</p>
+                                        <p style="margin: 0 0 5px 0;"><strong>Цена:</strong> ${escapeHTML(data.price)} ${escapeHTML(priceSuffix)}</p>
+                                        <p style="margin: 0;"><strong>Контакт:</strong> ${escapeHTML(data.contact)}</p>
+                                    </div>
+                                `;
+
+                                const preset = listing.type === 'rent_offer_long_term' ? 'islands#blueDotIcon' : 'islands#darkTurquoiseDotIcon';
+
+                                const placemark = new ymaps.Placemark(coords, {
+                                    balloonContent: balloonContent
+                                }, {
+                                    preset: preset
+                                });
+                                myMap.geoObjects.add(placemark);
+                            } else {
+                                console.warn(`Не удалось найти координаты для адреса: ${data.address}`);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Не удалось загрузить объявления:", error);
+                }
+            }
+
+            loadListings();
+        }
+    </script>
+</body>
+</html>

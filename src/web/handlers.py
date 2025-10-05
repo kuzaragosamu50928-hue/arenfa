@@ -141,8 +141,4 @@ async def serve_admin_panel(request):
 # В будущем здесь может быть публичная карта
 async def serve_public_map(request):
     """Отдает HTML-страницу публичной карты."""
-    # Для этого примера, предположим, что public_map.html не существует,
-    # и мы можем просто перенаправить на админ-панель или показать заглушку.
-    # В реальном проекте здесь был бы свой файл.
-    # return web.FileResponse('./public_map.html')
-    return web.HTTPFound('/admin')
+    return web.FileResponse('./public_map.html')

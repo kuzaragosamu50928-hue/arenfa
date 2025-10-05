@@ -73,11 +73,32 @@ async def get_image(request: web.Request) -> web.Response:
     file_id = request.match_info.get('file_id')
     if not file_id:
         return web.Response(status=404, text="File ID is missing.")
+async def get_image(request):
+    """Отдает файл изображения по его file_id, только если он принадлежит опубликованному объявлению."""
+    file_id = request.match_info.get('file_id')
+    if not file_id:
+        return web.Response(status=404)
+
     try:
+        # Проверяем, существует ли объявление с таким file_id
+        async with aiosqlite.connect(DB_PATH) as db:
+            # Ищем file_id внутри JSON-поля data.
+            # Это не самый эффективный способ, но для SQLite и текущей задачи он подходит.
+            # Мы ищем точное совпадение file_id в кавычках, чтобы избежать частичных совпадений.
+            query = "SELECT 1 FROM listings WHERE data LIKE ?"
+            cursor = await db.execute(query, (f'%"{file_id}"%',))
+            is_public = await cursor.fetchone()
+
+        if not is_public:
+            logger.warning(f"Попытка доступа к непубличному изображению: {file_id}")
+            return web.Response(status=404, text="Image not found or not public")
+
+        # Если проверка пройдена, скачиваем и отдаем файл
         file_info = await hunter_bot.get_file(file_id)
         # The file path from get_file is temporary, so we must download it immediately
         file_content = await hunter_bot.download_file(file_info.file_path)
         return web.Response(body=file_content, content_type='image/jpeg')
+
     except Exception as e:
         logger.error(f"Error fetching image for file_id {file_id}: {e}")
         return web.Response(status=500, text="Error retrieving image.")

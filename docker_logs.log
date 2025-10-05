@@ -1,0 +1,8 @@
+time="2025-10-05T07:33:28Z" level=warning msg="The \"DOMAIN_NAME\" variable is not set. Defaulting to a blank string."
+time="2025-10-05T07:33:28Z" level=warning msg="The \"MODERATOR_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-05T07:33:28Z" level=warning msg="The \"HUNTER_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-05T07:33:28Z" level=warning msg="The \"CHANNEL_ID\" variable is not set. Defaulting to a blank string."
+time="2025-10-05T07:33:28Z" level=warning msg="The \"ADMIN_ID\" variable is not set. Defaulting to a blank string."
+ Network geneva_network  Creating
+ Network geneva_network  Created
+ Container app-app-1  Creating

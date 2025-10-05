@@ -1,40 +1,68 @@
+"""
+Configuration module for the Geneva project.
+
+This module loads all necessary configuration from environment variables.
+It uses python-dotenv to load a .env file for local development.
+It also provides a centralized logger and validates the presence of
+critical environment variables upon import.
+"""
 import os
 import logging
-from dotenv import load_dotenv
+from typing import Optional
+# Attempt to load .env file for local development.
+# In a container, environment variables are injected directly.
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # This is expected in a production container where python-dotenv is not installed.
+    # The application will rely on environment variables provided by Docker/the system.
+    pass
 
-# Загружаем переменные из .env файла для локальной разработки
-load_dotenv()
+# --- Telegram Bot Tokens ---
+MODERATOR_BOT_TOKEN: Optional[str] = os.getenv('MODERATOR_BOT_TOKEN')
+HUNTER_BOT_TOKEN: Optional[str] = os.getenv('HUNTER_BOT_TOKEN')
 
-# --- Настройки ---
-MODERATOR_BOT_TOKEN = os.getenv('MODERATOR_BOT_TOKEN')
-HUNTER_BOT_TOKEN = os.getenv('HUNTER_BOT_TOKEN')
-CHANNEL_ID = os.getenv('CHANNEL_ID')
-ADMIN_ID = os.getenv('ADMIN_ID')
-DOMAIN_NAME = os.getenv('DOMAIN_NAME', 'localhost')
-DB_PATH = '/app/app_data/listings.db'
-SUBMISSION_COOLDOWN = 900 # 15 минут
+# --- Telegram Channel/Admin Info ---
+CHANNEL_ID: Optional[str] = os.getenv('CHANNEL_ID')
+ADMIN_ID: Optional[str] = os.getenv('ADMIN_ID')
 
-# --- Инициализация логирования ---
+# --- Web & Database Settings ---
+DOMAIN_NAME: str = os.getenv('DOMAIN_NAME', 'localhost')
+DB_PATH: str = '/app/app_data/listings.db'
+SUBMISSION_COOLDOWN: int = 900  # Cooldown period in seconds (15 minutes)
+
+# --- Logging Initialization ---
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# --- Проверка критически важных переменных ---
-def validate_config():
-    """Проверяет наличие всех обязательных переменных окружения."""
+# --- Critical Configuration Validation ---
+def validate_config() -> None:
+    """
+    Validates that all essential environment variables are set.
+
+    Raises:
+        SystemExit: If any critical environment variables are missing.
+    """
     critical_vars = {
         'MODERATOR_BOT_TOKEN': MODERATOR_BOT_TOKEN,
         'HUNTER_BOT_TOKEN': HUNTER_BOT_TOKEN,
         'CHANNEL_ID': CHANNEL_ID,
         'ADMIN_ID': ADMIN_ID
     }
-    missing_vars = [name for name, value in critical_vars.items() if value is None]
-    if missing_vars:
-        logger.critical(f"КРИТИЧЕСКАЯ ОШИБКА: Отсутствуют переменные окружения: {', '.join(missing_vars)}. Проверьте ваш .env файл или переменные среды.")
-        exit(1)
-    logger.info("Конфигурация успешно загружена и проверена.")
+    missing_vars = [name for name, value in critical_vars.items() if not value]
 
-# Выполняем проверку при импорте модуля
+    if missing_vars:
+        logger.critical(
+            f"CRITICAL ERROR: Missing environment variables: {', '.join(missing_vars)}. "
+            "Please check your .env file or environment settings."
+        )
+        exit(1)
+
+    logger.info("Configuration successfully loaded and validated.")
+
+# Perform validation when the module is imported.
 validate_config()

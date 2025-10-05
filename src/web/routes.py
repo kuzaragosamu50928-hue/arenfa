@@ -1,10 +1,21 @@
+"""
+URL route definitions for the aiohttp web application.
+
+This module maps the application's URLs to their corresponding
+request handler functions defined in `src.web.handlers`.
+"""
 from aiohttp import web
 from . import handlers
 
-def setup_routes(app: web.Application):
-    """Настраивает все маршруты для веб-приложения."""
+def setup_routes(app: web.Application) -> None:
+    """
+    Configures all routes for the web application.
 
-    # API маршруты
+    Args:
+        app: The aiohttp.web.Application instance.
+    """
+
+    # API routes for data interaction
     app.router.add_get('/api/stats', handlers.get_stats)
     app.router.add_get('/api/submissions', handlers.get_submissions)
     app.router.add_get('/api/listings', handlers.get_listings)
@@ -12,12 +23,7 @@ def setup_routes(app: web.Application):
     app.router.add_post('/api/approve', handlers.approve_submission)
     app.router.add_post('/api/reject', handlers.reject_submission)
 
-    # Маршруты для статических страниц
+    # Routes for serving the frontend HTML pages
     app.router.add_get('/admin', handlers.serve_admin_panel)
-
-    # Главная страница и карта (пока ведут на заглушку/админку)
     app.router.add_get('/', handlers.serve_public_map)
     app.router.add_get('/map', handlers.serve_public_map)
-
-    # Добавим обработку статических файлов, если они понадобятся в будущем
-    # app.router.add_static('/static/', path='path/to/static', name='static')

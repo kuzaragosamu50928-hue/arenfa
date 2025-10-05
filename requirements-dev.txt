@@ -1,0 +1,6 @@
+# Production Dependencies
+-r requirements.txt
+
+# Development & Testing
+playwright==1.54.0
+python-dotenv==1.0.1

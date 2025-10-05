@@ -4,19 +4,13 @@ services:
   app:
     build: .
     restart: unless-stopped
-    # Мы больше не открываем порт 80 наружу, этим будет заниматься только Nginx
-    # ports:
-    #   - "80:8080"
     volumes:
       - ./app_data:/app/app_data
-    environment:
-      # ВАЖНО: Вставь свои реальные данные прямо сюда, в кавычках!
-      MODERATOR_BOT_TOKEN: "8256765729:AAHwspBWoNfhZP1VlDGRjYuRp6wqmv-3GI8"
-      HUNTER_BOT_TOKEN: "8212180903:AAGoAXApJhMCBOPgyvY-h7fyWMj3xc3HqO8"
-      CHANNEL_ID: "@arenda_melitopol_v2"
-      ADMIN_ID: "5183733137"
-      DOMAIN_NAME: "arenda-melitopol.ru"
+    env_file:
+      - .env
+    networks:
+      - geneva_network
 
 networks:
-  default:
+  geneva_network:
     name: geneva_network
